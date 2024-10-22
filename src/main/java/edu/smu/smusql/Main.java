@@ -2,15 +2,20 @@ package edu.smu.smusql;
 
 import java.util.*;
 
+// @author ziyuanliu@smu.edu.sg
+
 public class Main {
-    // Main method to run the simple database engine
+    /*
+     *  Main method for accessing the command line interface of the database engine.
+     *  MODIFICATION OF THIS FILE IS NOT RECOMMENDED!
+     */
     static Engine dbEngine = new Engine();
     public static void main(String[] args) {
 
         Scanner scanner = new Scanner(System.in);
 
-        System.out.println("smuSQL version 0.5.1 2024-09-20");
-        System.out.println("sample implementation for reference only");
+        System.out.println("smuSQL Starter Code version 0.5");
+        System.out.println("Have fun, and good luck!");
 
         while (true) {
             System.out.print("smusql> ");
@@ -32,10 +37,15 @@ public class Main {
         scanner.close();
     }
 
+
+    /*
+     *  Below is the code for auto-evaluating your work.
+     *  DO NOT CHANGE ANYTHING BELOW THIS LINE!
+     */
     public static void autoEvaluate() {
 
         // Set the number of queries to execute
-        int numberOfQueries = 100000;
+        int numberOfQueries = 1000000;
 
         // Create tables
         dbEngine.executeSQL("CREATE TABLE users (id, name, age, city)");
@@ -45,6 +55,7 @@ public class Main {
         // Random data generator
         Random random = new Random();
 
+        // Prepopulate the tables in preparation for evaluation
         prepopulateTables(random);
 
         // Loop to simulate millions of queries
