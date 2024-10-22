@@ -1,7 +1,7 @@
 package edu.smu.smusql;
 
 public class Engine {
-
+    
     public String executeSQL(String query) {
         String[] tokens = query.trim().split("\\s+");
         String command = tokens[0].toUpperCase();
