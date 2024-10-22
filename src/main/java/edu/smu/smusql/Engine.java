@@ -40,7 +40,11 @@ public class Engine {
         return "not implemented";
     }
     public String create(String[] tokens) {
-        //TODO
+        if (!tokens[1].equalsIgnoreCase("TABLE")) {
+            return "ERROR: Invalid CREATE TABLE syntax";
+        }
+        
+
         return "not implemented";
     }
 
