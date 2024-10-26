@@ -1,178 +1,221 @@
 package edu.smu.smusql;
-import java.util.Map;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class AVLTree<E> {
-    //This AVL Tree represent the structure of the Table
 
-    private static Node root = null;
+    class AVLNode {
+        private int key;
+        private int height;
+        private AVLNode left;
+        private AVLNode right;
+        private E element;
 
-    public AVLTree(){
-
-    }
-
-    public Node update(String searchString, Map<String, String> newRow){
-        Node nodeToUpdate = search(root, searchString);
-        nodeToUpdate.setRow(newRow);
-        return nodeToUpdate;
-    }
-
-    public static Node search(Node node, String searchString){
-        if (node == null){
-            return null; //note not found
-        }
-        if (getFirstColumn(node).equals(searchString)){
-            return node; //null means that node already exists
-        }
-
-        if (getFirstColumn(node).compareTo(searchString) < 0){ //if inputString is larger than current node
-            return search(node.getRightNode(), searchString);
-        } else { //if inputString is smaller than current node
-            return search(node.getLeftNode(), searchString);
+        AVLNode(int key, E element) {
+            this.element = element;
+            this.key = key;
+            this.height = 1;
         }
     }
 
-    public static Node getNodeToInsert(Node node, String searchString){
-        if (getFirstColumn(node).equals(searchString)){
-            return null; //null means that node already exists
-        }
+    private AVLNode root;
 
-        if (getFirstColumn(node).compareTo(searchString) < 0){ //if inputString is larger than current node
-            if (node.getRightNode() != null){
-                return search(node.getRightNode(), searchString);
-            } else {
-                return node;
-            }
-        } else { //if inputString is smaller than current node
-            if (node.getLeftNode() != null){
-                return search(node.getLeftNode(), searchString);
-            } else {
-                return node;
-            }
-        }
+    // Get height of the node
+    private int height(AVLNode node) {
+        return (node == null) ? 0 : node.height;
     }
 
-    public static Node getBiggestLeftNode(Node node){
-        if (node.getRightNode() == null){
+    // Get balance factor of the node
+    private int balanceFactor(AVLNode node) {
+        return (node == null) ? 0 : height(node.left) - height(node.right);
+    }
+
+    // Update the height of the node
+    private void updateHeight(AVLNode node) {
+        node.height = Math.max(height(node.left), height(node.right)) + 1;
+    }
+
+    // Right rotation
+    private AVLNode rightRotate(AVLNode y) {
+        AVLNode x = y.left;
+        AVLNode T2 = x.right;
+
+        x.right = y;
+        y.left = T2;
+
+        updateHeight(y);
+        updateHeight(x);
+
+        return x;
+    }
+
+    // Left rotation
+    private AVLNode leftRotate(AVLNode x) {
+        AVLNode y = x.right;
+        AVLNode T2 = y.left;
+
+        y.left = x;
+        x.right = T2;
+
+        updateHeight(x);
+        updateHeight(y);
+
+        return y;
+    }
+
+    // Insert a key into the AVL tree
+    public void insert(E element, int key) {
+        root = insertRec(root, key);
+    }
+
+    private AVLNode insertRec(AVLNode node, int key) {
+        if (node == null) {
+            return new AVLNode(key, null);
+        }
+
+        if (key < node.key) {
+            node.left = insertRec(node.left, key);
+        } else if (key > node.key) {
+            node.right = insertRec(node.right, key);
+        } else {
+            // Duplicate keys not allowed
             return node;
-        } else{
-            return getBiggestLeftNode(node.getRightNode());
         }
+
+        updateHeight(node);
+        int balance = balanceFactor(node);
+
+        // Left-Left case
+        if (balance > 1 && key < node.left.key) {
+            return rightRotate(node);
+        }
+
+        // Right-Right case
+        if (balance < -1 && key > node.right.key) {
+            return leftRotate(node);
+        }
+
+        // Left-Right case
+        if (balance > 1 && key > node.left.key) {
+            node.left = leftRotate(node.left);
+            return rightRotate(node);
+        }
+
+        // Right-Left case
+        if (balance < -1 && key < node.right.key) {
+            node.right = rightRotate(node.right);
+            return leftRotate(node);
+        }
+
+        return node;
     }
 
-    public static void delete(String searchString){
-        Node nodeToDelete = search(root, searchString);
+    // Delete a key from the AVL tree
+    public void delete(int key) {
+        root = deleteRec(root, key);
+    }
 
-        if (nodeToDelete == null){
-            return;
+    private AVLNode deleteRec(AVLNode node, int key) {
+        if (node == null) {
+            return node;
         }
 
-        Node parentNode = nodeToDelete.getParentNode();
-        Node nodeToBalance = null;
-        
-        if (nodeToDelete.getRightNode() != null && nodeToDelete.getLeftNode() != null){ //2 children
-            Node largestLeftNode = getBiggestLeftNode(nodeToDelete.getLeftNode());
-            Map<String,String> newRow = largestLeftNode.getRow();
-            delete(getFirstColumn(largestLeftNode));
-            nodeToDelete.setRow(newRow);
-        } else if(nodeToDelete.getRightNode() == null){ //node has 1 left child
-            nodeToBalance = nodeToDelete.getLeftNode();
-        } else if(nodeToDelete.getLeftNode() == null){ // node has 1 right child
-            nodeToBalance = nodeToDelete.getRightNode();
-        }
-
-        if (parentNode.getLeftNode() == nodeToDelete){
-            parentNode.setLeftNode(nodeToBalance);
+        // Perform standard BST deletion
+        if (key < node.key) {
+            node.left = deleteRec(node.left, key);
+        } else if (key > node.key) {
+            node.right = deleteRec(node.right, key);
         } else {
-            parentNode.setRightNode(nodeToBalance);
-        }
-
-        //balance below
-        if (nodeToBalance == null){
-            nodeToBalance = parentNode;
-        }
-        balanceTheTree(nodeToBalance);
-
-        return;
-    }
-
-    public void insert(Node node){
-        if (root == null){
-            root = node;
-            return;
-        }
-        
-        String firstColumnString = getFirstColumn(node);
-        Node parentNode = getNodeToInsert(root, firstColumnString);
-        
-        if (getFirstColumn(parentNode) == firstColumnString)return; //can't insert with the same first column value
-
-        //inserting the node
-        if (getFirstColumn(parentNode).compareTo(firstColumnString) < 0){
-            parentNode.setRightNode(node);
-        } else {
-            parentNode.setLeftNode(node);
-        }
-        node.setParentNode(parentNode);
-
-        //balancing the tree
-        balanceTheTree(node);
-    }
-
-    public static void balanceTheTree(Node node){
-        while(node.getParentNode() != null){ //checks until reach root node because rootnode parent is null
-            node = node.getParentNode();
-            if (getBalance(node) > 1){ //left heavy
-                if (getHeight(node.getLeftNode()) < getHeight(node.getRightNode())){ //LR
-                    rotateLeft(node.getLeftNode());
-                    rotateRight(node);
-                } else { //LL
-                    rotateRight(node);
-                }
-            } else if (getBalance(node) < -1){ //right heavy
-                if (getHeight(node.getLeftNode()) > getHeight(node.getRightNode())){ //RL
-                    rotateRight(node.getRightNode());
-                    rotateLeft(node);
-                } else { //RR
-                    rotateLeft(node);
-                }
+            // Node with only one child or no child
+            if (node.left == null) {
+                return node.right;
+            } else if (node.right == null) {
+                return node.left;
             }
+
+            // Node with two children
+            AVLNode temp = minValueNode(node.right);
+            node.key = temp.key;
+            node.element = temp.element;
+            node.right = deleteRec(node.right, temp.key);
+        }
+
+        // Update height of the current node
+        updateHeight(node);
+
+        // Balance the node
+        int balance = balanceFactor(node);
+
+        // Left Left Case
+        if (balance > 1 && balanceFactor(node.left) >= 0) {
+            return rightRotate(node);
+        }
+
+        // Left Right Case
+        if (balance > 1 && balanceFactor(node.left) < 0) {
+            node.left = leftRotate(node.left);
+            return rightRotate(node);
+        }
+
+        // Right Right Case
+        if (balance < -1 && balanceFactor(node.right) <= 0) {
+            return leftRotate(node);
+        }
+
+        // Right Left Case
+        if (balance < -1 && balanceFactor(node.right) > 0) {
+            node.right = rightRotate(node.right);
+            return leftRotate(node);
+        }
+
+        return node;
+    }
+
+    // Search function to find the element with the given key
+    public E search(int key) {
+        AVLNode node = searchRecursive(root, key);
+        return node != null ? node.element : null;
+    }
+
+    // Recursive search function to traverse the tree
+    private AVLNode searchRecursive(AVLNode node, int key) {
+        // Base case: node is null or key is found
+        if (node == null || node.key == key) {
+            return node;
+        }
+
+        // Traverse the left subtree if key is smaller than node's key
+        if (key < node.key) {
+            return searchRecursive(node.left, key);
+        }
+
+        // Traverse the right subtree if key is greater than node's key
+        return searchRecursive(node.right, key);
+    }
+
+    // Find the node with the smallest key
+    private AVLNode minValueNode(AVLNode node) {
+        AVLNode current = node;
+        while (current.left != null) {
+            current = current.left;
+        }
+        return current;
+    }
+
+    // Public method to start in-order traversal
+    public List<E> inorderTraversal() {
+        List<E> elements = new ArrayList<>();
+        inorderTraversalRec(root, elements);
+        return elements;
+    }
+
+    // Helper method to perform in-order traversal
+    private void inorderTraversalRec(AVLNode node, List<E> elements) {
+        if (node != null) {
+            inorderTraversalRec(node.left, elements); // Traverse left subtree
+            elements.add(node.element); // Visit node
+            inorderTraversalRec(node.right, elements); // Traverse right subtree
         }
     }
-
-    public static void rotateRight(Node node){ //arg is the imbalanced node
-        Node temp = node;
-        node = node.getLeftNode();
-        if (node.getRightNode() != null){
-            temp.setLeftNode(node.getRightNode());
-        }
-        node.setRightNode(temp);
-    }
-
-    public static void rotateLeft(Node node){ //arg is the imbalanced node
-        Node temp = node;
-        node = node.getRightNode();
-        if (node.getLeftNode() != null){
-            temp.setRightNode(node.getLeftNode());
-        }
-        node.setLeftNode(temp);
-    }
-
-    public static String getFirstColumn(Node node){
-        Map<String, String> rowMap = node.getRow();
-        return (String)rowMap.keySet().toArray()[0];
-    }
-
-    public static int getBalance(Node node){
-        int leftHeight = getHeight(node.getLeftNode());
-        int rightHeight = getHeight(node.getRightNode());
-        return leftHeight - rightHeight;
-    }
-
-    public static int getHeight(Node node){
-        if (node.isleafNode()){
-            return 0;
-        }
-        return 1 + Math.max(getHeight(node.getLeftNode()), getHeight(node.getRightNode()));
-    }
-
 }
