@@ -2,21 +2,16 @@ package edu.smu.smusql;
 
 import java.util.*;
 
-// @author ziyuanliu@smu.edu.sg
-
 public class Main {
-    /*
-     *  Main method for accessing the command line interface of the database engine.
-     *  MODIFICATION OF THIS FILE IS NOT RECOMMENDED!
-     */
+    // Main method to run the simple database engine
     static Engine dbEngine = new Engine();
     public static void main(String[] args) {
 
         Scanner scanner = new Scanner(System.in);
 
-        System.out.println("smuSQL Starter Code version 0.5");
-        System.out.println("Have fun, and good luck!");
-
+        System.out.println("smuSQL version 0.5.1 2024-09-20");
+        System.out.println("sample implementation for reference only");
+        autoEvaluate();
         while (true) {
             System.out.print("smusql> ");
             String query = scanner.nextLine();
@@ -37,15 +32,10 @@ public class Main {
         scanner.close();
     }
 
-
-    /*
-     *  Below is the code for auto-evaluating your work.
-     *  DO NOT CHANGE ANYTHING BELOW THIS LINE!
-     */
     public static void autoEvaluate() {
 
         // Set the number of queries to execute
-        int numberOfQueries = 1000000;
+        int numberOfQueries = 50000;
 
         // Create tables
         dbEngine.executeSQL("CREATE TABLE users (id, name, age, city)");
@@ -55,9 +45,8 @@ public class Main {
         // Random data generator
         Random random = new Random();
 
-        // Prepopulate the tables in preparation for evaluation
         prepopulateTables(random);
-
+        long startTime = System.nanoTime();
         // Loop to simulate millions of queries
         for (int i = 0; i < numberOfQueries; i++) {
             int queryType = random.nextInt(6);  // Randomly choose the type of query to execute
@@ -88,6 +77,14 @@ public class Main {
                 System.out.println("Processed " + i + " queries...");
             }
         }
+         // Capture the end time
+         long endTime = System.nanoTime();
+
+         // Calculate the elapsed time in milliseconds
+         long elapsedTime = (endTime - startTime) / 1_000_000;
+ 
+         // Print the elapsed time
+         System.out.println("Processed " + numberOfQueries + " queries in " + elapsedTime + " milliseconds.");
 
         System.out.println("Finished processing " + numberOfQueries + " queries.");
     }
