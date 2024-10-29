@@ -27,16 +27,26 @@ public class AVLTree<E> {
     /* ================= Utility Methods ================= */
 
     private int height(AVLNode node) {
-        return (node == null) ? 0 : node.height;
+        if (node == null) {
+            return 0;
+        } else {
+            return node.height;
+        }
     }
-
+    
     private int balanceFactor(AVLNode node) {
-        return (node == null) ? 0 : height(node.left) - height(node.right);
+        if (node == null) {
+            return 0;
+        } else {
+            return height(node.left) - height(node.right);
+        }
     }
-
+    
     private void updateHeight(AVLNode node) {
         if (node != null) {
-            node.height = Math.max(height(node.left), height(node.right)) + 1;
+            int leftHeight = height(node.left);
+            int rightHeight = height(node.right);
+            node.height = Math.max(leftHeight, rightHeight) + 1;
         }
     }
 
@@ -167,14 +177,22 @@ public class AVLTree<E> {
 
     public E search(int key) {
         AVLNode node = searchRecursive(root, key);
-        return node != null ? node.element : null;
+        if (node != null) {
+            return node.element;
+        } else {
+            return null;
+        }
     }
-
+    
     private AVLNode searchRecursive(AVLNode node, int key) {
         if (node == null || node.key == key) {
             return node;
         }
-        return (key < node.key) ? searchRecursive(node.left, key) : searchRecursive(node.right, key);
+        if (key < node.key) {
+            return searchRecursive(node.left, key);
+        } else {
+            return searchRecursive(node.right, key);
+        }
     }
 
     /* ================= Traversal Operations ================= */
