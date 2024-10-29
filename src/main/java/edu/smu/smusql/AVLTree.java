@@ -1,7 +1,9 @@
 package edu.smu.smusql;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 public class AVLTree<E> {
 
@@ -33,7 +35,9 @@ public class AVLTree<E> {
     }
 
     private void updateHeight(AVLNode node) {
-        node.height = Math.max(height(node.left), height(node.right)) + 1;
+        if (node != null) {
+            node.height = Math.max(height(node.left), height(node.right)) + 1;
+        }
     }
 
     private AVLNode minValueNode(AVLNode node) {
@@ -47,8 +51,7 @@ public class AVLTree<E> {
     /* ================= Rotation Methods ================= */
 
     private AVLNode rightRotate(AVLNode y) {
-        if (y == null || y.left == null) return y; // Additional null check
-
+        
         AVLNode x = y.left;
         AVLNode T2 = x.right;
 
@@ -62,8 +65,7 @@ public class AVLTree<E> {
     }
 
     private AVLNode leftRotate(AVLNode x) {
-        if (x == null || x.right == null) return x; // Additional null check
-
+        
         AVLNode y = x.right;
         AVLNode T2 = y.left;
 
@@ -84,6 +86,7 @@ public class AVLTree<E> {
 
     private AVLNode insertRec(AVLNode node, int key, E element) {
         if (node == null) {
+            
             return new AVLNode(key, element);
         }
 
@@ -92,11 +95,11 @@ public class AVLTree<E> {
         } else if (key > node.key) {
             node.right = insertRec(node.right, key, element);
         } else {
-            return node;
+            return node; // Duplicate keys are not allowed
         }
 
         updateHeight(node);
-        return balanceNode(node, key);
+        return balanceNode(node);
     }
 
     /* ================= Delete Operations ================= */
@@ -125,7 +128,39 @@ public class AVLTree<E> {
         }
 
         updateHeight(node);
-        return balanceNode(node, key);
+        return balanceNode(node);
+    }
+
+    /* ================= Balancing Method ================= */
+
+    private AVLNode balanceNode(AVLNode node) {
+        int balance = balanceFactor(node);
+
+        // Left-heavy
+        if (balance > 1) {
+            if (balanceFactor(node.left) >= 0) {
+                
+                return rightRotate(node); // Left-Left case
+            } else {
+                
+                node.left = leftRotate(node.left); // Left-Right case
+                return rightRotate(node);
+            }
+        }
+
+        // Right-heavy
+        if (balance < -1) {
+            if (balanceFactor(node.right) <= 0) {
+                
+                return leftRotate(node); // Right-Right case
+            } else {
+                
+                node.right = rightRotate(node.right); // Right-Left case
+                return leftRotate(node);
+            }
+        }
+
+        return node; // Node is balanced
     }
 
     /* ================= Search Operations ================= */
@@ -144,6 +179,8 @@ public class AVLTree<E> {
 
     /* ================= Traversal Operations ================= */
 
+    /* ================= Traversal Operations ================= */
+
     public List<E> inorderTraversal() {
         List<E> elements = new ArrayList<>();
         inorderTraversalRec(root, elements);
@@ -158,33 +195,22 @@ public class AVLTree<E> {
         }
     }
 
-    /* ================= Balancing Method ================= */
+    // Level-order traversal to show the tree structure
+    public void levelOrderTraversal() {
+        if (root == null) return;
 
-    private AVLNode balanceNode(AVLNode node, int key) {
-        int balance = balanceFactor(node);
-
-        // Left-Left case
-        if (balance > 1 && node.left != null && key < node.left.key) {
-            return rightRotate(node);
+        Queue<AVLNode> queue = new LinkedList<>();
+        queue.add(root);
+        while (!queue.isEmpty()) {
+            int levelSize = queue.size();
+            while (levelSize > 0) {
+                AVLNode currentNode = queue.poll();
+                System.out.print("[" + currentNode.key + "] ");
+                if (currentNode.left != null) queue.add(currentNode.left);
+                if (currentNode.right != null) queue.add(currentNode.right);
+                levelSize--;
+            }
+            System.out.println();
         }
-
-        // Right-Right case
-        if (balance < -1 && node.right != null && key > node.right.key) {
-            return leftRotate(node);
-        }
-
-        // Left-Right case
-        if (balance > 1 && node.left != null && key > node.left.key) {
-            node.left = leftRotate(node.left);
-            return rightRotate(node);
-        }
-
-        // Right-Left case
-        if (balance < -1 && node.right != null && key < node.right.key) {
-            node.right = rightRotate(node.right);
-            return leftRotate(node);
-        }
-
-        return node;
     }
 }
