@@ -17,7 +17,7 @@ public class Main {
 
         Scanner scanner = new Scanner(System.in);
 
-        System.out.println("smuSQL Red BLack Tree Implementation version 1.1");
+        System.out.println("smuSQL AVL Tree Implementation");
         System.out.println("Have A LOT OF fun, and good luck!");
 
         while (true) {

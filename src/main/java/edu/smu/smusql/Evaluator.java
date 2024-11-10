@@ -1,9 +1,12 @@
 package edu.smu.smusql;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
 /*
- * This class is holds the additional evaluation methods, on top of the original
+ * This class holds the additional evaluation methods, on top of the original
  */
 public class Evaluator {
     // Database engine instance
@@ -44,36 +47,54 @@ public class Evaluator {
         Random random = new Random();
 
         // Prepopulate the tables in preparation for evaluation
-        
+        List<Integer> ids = new ArrayList<>();
+        for (int i = 0; i < 10000; i++) {
+            ids.add(i);
+        }
+        Collections.shuffle(ids);
         // Capture the start time
+        
         long startTime = System.nanoTime();
         prepopulateTables(random);
         // Loop to simulate millions of queries
+        int searchCount = 0;
+        int insertCount = 10000;
+        int updateCount = 0;
+        int deleteCount = 0;
+        int complexSelectCount = 0;
+        int complexUpdateCount = 0;
+
         for (int i = 0; i < numberOfQueries - 1000; i++) {
-            int queryType = random.nextInt(5); // Randomly choose the type of query to execute
+            int queryType = random.nextInt(4); // Randomly choose the type of query to execute
             String queryResponse = null;
+            int idForQuery = ids.get(i%10000);
             switch (queryType) {
-                case 0: // INSERT query
-                    /*
-                     * We have changed from the original method insertRandomData(random) to
-                     * insertRandomData2(random) to avoid duplicate ids when inserting data
-                     */
-                    queryResponse = insertRandomData2(random);
-                    break;
-                case 1: // SELECT query (simple)
+                // case 0: // INSERT query
+                //     /*
+                //      * We have changed from the original method insertRandomData(random) to
+                //      * insertRandomData2(random) to avoid duplicate ids when inserting data
+                //      */
+                //     queryResponse = insertRandomData2(random);
+                //     insertCount++;
+                //     break;
+                case 0: // SELECT query (simple)
                     queryResponse = selectRandomDataAlt(random);
+                    searchCount++;
                     break;
-                case 2: // UPDATE query
-                    queryResponse = updateRandomDataAlt(random);
+                case 1: // UPDATE query
+                    queryResponse = updateRandomDataAlt(random, idForQuery);
+                    updateCount++;
                     break;
                 // case 3: // DELETE query
                 //     queryResponse = deleteRandomDataAlt(random);
                 //     break;
-                case 3: // Complex SELECT query with WHERE, AND, OR, >, <, LIKE
-                    queryResponse = complexSelectQueryAlt(random);
+                case 2: // Complex SELECT query with WHERE, AND, OR, >, <, LIKE
+                    queryResponse = complexSelectQueryAlt(random, idForQuery);
+                    complexSelectCount++;
                     break;
-                case 4: // Complex UPDATE query with WHERE
+                case 3: // Complex UPDATE query with WHERE
                     queryResponse = complexUpdateQueryAlt(random);
+                    complexUpdateCount++;
                     break;
             }
             
@@ -86,11 +107,16 @@ public class Evaluator {
             // Print progress every 100,000 queries
             if (i % 10000 == 0) {
                 System.out.println("Processed " + i + " queries...");
+                
             }
         }
+       
+    
         for (int j = 0; j < 10000; j++) {
+            int idToDelete = ids.get(j);
             String queryResponse = null;
-            queryResponse = deleteRandomDataAlt(random, j);
+            queryResponse = deleteRandomDataAlt(random, idToDelete);
+            deleteCount++;
             if (queryResponse.contains("ERROR")) {
                 errors++;
             }
@@ -102,6 +128,12 @@ public class Evaluator {
         // Print the elapsed time
         System.out.println("Processed " + numberOfQueries + " queries in " + elapsedTime + " milliseconds.");
         System.out.println("Finished processing " + numberOfQueries + " queries.");
+        System.out.println("Search Count: " + searchCount);
+        System.out.println("Insert Count: " + insertCount);
+        System.out.println("Update Count: " + updateCount);
+        System.out.println("Delete Count: " + deleteCount);
+        System.out.println("Complex Select Count: " + complexSelectCount);
+        System.out.println("Complex Update Count: " + complexUpdateCount);
         // Calculate and print the error percentage
         double errorPercentage = (errors / numberOfQueries) * 100;
         System.out.println("Error percentage: " + errorPercentage + "%");
@@ -146,12 +178,17 @@ public class Evaluator {
 
     private static void prepopulateTables(Random random) {
         System.out.println("Prepopulating users");
+        List<Integer> ids = new ArrayList<>();
+        for (int i = 0; i < 10000; i++) {
+            ids.add(i);
+        }
         // Insert initial users
         for (int i = 0; i < 10000; i++) {
             String name = "User" + i;
             int age = 20 + (i % 41); // Ages between 20 and 60
             String city = getRandomCity(random);
-            String insertCommand = String.format("INSERT INTO users VALUES (%d, '%s', %d, '%s')", i, name, age, city);
+            int id = ids.get(i);
+            String insertCommand = String.format("INSERT INTO users VALUES (%d, '%s', %d, '%s')", id, name, age, city);
             dbEngine.executeSQL(insertCommand);
         }
         System.out.println("Prepopulating products");
@@ -234,13 +271,13 @@ public class Evaluator {
                     queryResponse = selectRandomDataAlt(random);
                     break;
                 case 2: // UPDATE query
-                    queryResponse = updateRandomDataAlt(random);
+                    queryResponse = updateRandomDataAlt(random, i);
                     break;
                 // case 3: // DELETE query
                 //     queryResponse = deleteRandomDataAlt(random);
                 //     break;
                 case 4: // Complex SELECT query with WHERE, AND, OR, >, <, LIKE
-                    queryResponse = complexSelectQueryAlt(random);
+                    queryResponse = complexSelectQueryAlt(random, i);
                     break;
                 case 5: // Complex UPDATE query with WHERE
                     queryResponse = complexUpdateQueryAlt(random);
@@ -332,26 +369,26 @@ public class Evaluator {
     }
     
     // Helper method to update random data in the tables
-    private static String updateRandomDataAlt(Random random) {
+    private static String updateRandomDataAlt(Random random, int i) {
         int tableChoice = random.nextInt(3);
         String queryResponse = null;
         switch (tableChoice) {
             case 0: // Update users table
                 int id = random.nextInt(10000) + 1;
                 int newAge = random.nextInt(60) + 20;
-                String updateUserQuery = "UPDATE users SET age = " + newAge + " WHERE id = " + 2;
+                String updateUserQuery = "UPDATE users SET age = " + newAge + " WHERE id = " + i;
                 queryResponse = dbEngine.executeSQL(updateUserQuery);
                 break;
             case 1: // Update products table
                 int productId = random.nextInt(1000) + 1;
                 double newPrice = 50 + (random.nextDouble() * 1000);
-                String updateProductQuery = "UPDATE products SET price = " + newPrice + " WHERE id = " + 2;
+                String updateProductQuery = "UPDATE products SET price = " + newPrice + " WHERE id = " + i;
                 queryResponse = dbEngine.executeSQL(updateProductQuery);
                 break;
             case 2: // Update orders table
                 int orderId = random.nextInt(10000) + 1;
                 int newQuantity = random.nextInt(10) + 1;
-                String updateOrderQuery = "UPDATE orders SET quantity = " + newQuantity + " WHERE id = " + 2;
+                String updateOrderQuery = "UPDATE orders SET quantity = " + newQuantity + " WHERE id = " + i;
                 queryResponse = dbEngine.executeSQL(updateOrderQuery);
                 break;
         }
@@ -362,6 +399,7 @@ public class Evaluator {
     private static String deleteRandomDataAlt(Random random, int j) {
         int tableChoice = random.nextInt(3);
         String queryResponse = null;
+        
         switch (tableChoice) {
             case 0: // Delete from users table
                 int userId = random.nextInt(10000) + 1;
@@ -384,8 +422,9 @@ public class Evaluator {
 
     // Helper method to execute a complex SELECT query with WHERE, AND, OR, >, <,
     // LIKE
-    private static String complexSelectQueryAlt(Random random) {
-        int tableChoice = random.nextInt(2); // Complex queries only on users and products for now
+    private static String complexSelectQueryAlt(Random random, int idForQuery) {
+        
+        int tableChoice = random.nextInt(4); // Complex queries only on users and products for now
         String complexSelectQuery;
         switch (tableChoice) {
             case 0: // Complex SELECT on users
@@ -404,6 +443,10 @@ public class Evaluator {
                 String category = getRandomCategory(random);
                 complexSelectQuery = "SELECT * FROM products WHERE price > " + minPrice2 + " AND category = "
                         + category;
+                break;
+            case 3: // Complex SELECT on users
+                
+                complexSelectQuery = "SELECT * FROM users WHERE id = " + idForQuery;
                 break;
             default:
                 complexSelectQuery = "SELECT * FROM users";
