@@ -32,6 +32,7 @@ public class Engine {
 
     public String insert(String[] tokens) {
        if (!tokens[1].equalsIgnoreCase("INTO")) {
+        System.out.println( "35");
             return "ERROR: Invalid INSERT INTO syntax";
         }
 
@@ -40,6 +41,7 @@ public class Engine {
         // Search for the table in the BST
         Table table = dataList.search(tableName.hashCode());
         if (table == null) {
+            System.out.println("44");
             return "ERROR: Table not found";
         }
 
@@ -55,6 +57,7 @@ public class Engine {
         List<String> columns = table.getColumns();
        
         if (columns.size() != values.size()) {
+            System.out.println("60");
             return "ERROR: Column count does not match value count";
         }
 
@@ -65,6 +68,7 @@ public class Engine {
         }
         int id = Integer.parseInt(newRow.get("id"));
         if (table.getDataList().search(id) != null) {
+            System.out.println("71");
             return "ERROR: Duplicate id";
         }
         // Insert the new row into the table
@@ -83,6 +87,7 @@ public class Engine {
         // Search for the table in the BST
         Table table = dataList.search(tableName.hashCode());
         if (table == null) {
+            System.out.println("90");
             return "ERROR: Table not found";
         }
 
@@ -102,7 +107,9 @@ public class Engine {
         // Retrieve and delete the rows that match the conditions
         List<Map<String, String>> rows = table.getDataList().inorderTraversal();
         List<Map<String, String>> rowsToDelete = filterRows(rows, whereClause);
-
+        // if (rowsToDelete.isEmpty() || rowsToDelete == null) {
+        //     return "ERROR: No rows found to delete";
+        // }
         for (Map<String, String> row : rowsToDelete) {
             int id = Integer.parseInt(row.get("id"));
             table.getDataList().delete(id);
@@ -132,6 +139,7 @@ public class Engine {
                 break;
             }
         }
+        
 
         // Retrieve and format the data from the table
         StringBuilder result = new StringBuilder();
@@ -150,6 +158,7 @@ public class Engine {
             result.setLength(result.length() - 2); // Remove trailing comma and space
             result.append("\n");
         }
+
 
         return result.toString();
     }
@@ -192,11 +201,19 @@ public class Engine {
         List<Map<String, String>> rows = table.getDataList().inorderTraversal();
         List<Map<String, String>> rowsToUpdate = filterRows(rows, whereClause);
 
+        if (rowsToUpdate.isEmpty() || rowsToUpdate == null) {
+            for (int i =0; i < tokens.length; i++) {
+                System.out.print(tokens[i]);
+            }
+            System.out.println("205");
+            return "ERROR: No rows found to update";
+        }
         for (Map<String, String> row : rowsToUpdate) {
             for (Map.Entry<String, String> entry : updates.entrySet()) {
                 row.put(entry.getKey(), entry.getValue());
             }
             int id = Integer.parseInt(row.get("id"));
+           
             table.getDataList().delete(id);
             table.addRow(row);
         }
